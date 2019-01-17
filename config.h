@@ -20,6 +20,7 @@ public:
     const std::string& logFilename() const;
     int verbosity() const;
     const std::string& cfgFilename() const;
+    uint16_t port() const;
     
 private:
     typedef std::unordered_map<int, Host> Hosts;
@@ -30,6 +31,7 @@ private:
     std::string _logFile;
     bool _useSyslog;
     bool _useConsole;
+    uint16_t _port;
     
 };
 
@@ -58,5 +60,9 @@ inline const std::string & Config::cfgFilename() const
     return _cfgFile;
 }
 
+inline uint16_t Config::port() const
+{
+    return _port;
+}
 
 #endif

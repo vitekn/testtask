@@ -19,6 +19,11 @@ using namespace log4cpp;
 event_base *base = 0;
 bool run = true;
 
+void sig_pipe(int signum)
+{
+    //ignore
+}
+
 void sig_handler(int signum)
 {
     run = false;
@@ -28,7 +33,6 @@ void sig_handler(int signum)
     }
 }
 
-
 log4cpp::Priority::Value toPriority(int l)
 {
     static log4cpp::Priority::Value map[] = {
@@ -37,12 +41,10 @@ log4cpp::Priority::Value toPriority(int l)
         log4cpp::Priority::INFO,
         log4cpp::Priority::DEBUG};
         
-    if (l>3) l=3;
+    if (l > 3) l=3;
     
     return map[l];
 }
-
-
 
 int main(int argc, char **argv)
 {
@@ -51,6 +53,8 @@ int main(int argc, char **argv)
     signal(SIGQUIT, sig_handler);    
     signal(SIGABRT, sig_handler);    
     signal(SIGTERM, sig_handler);    
+    
+    signal(SIGPIPE, sig_pipe);
     
     base = event_base_new();
     if (!base){
@@ -88,8 +92,12 @@ int main(int argc, char **argv)
         return -3;
     }
     
-    Server            s(12345, base);
+    Server            s(cfg->port(), base);
     s.setOnError([](){ event_base_loopbreak(base);});
+    if (!s.init()) {
+        root << Priority::ERROR << "can't init server";
+        return -4;
+    }
     
     ConnectionManager cm(base);
 

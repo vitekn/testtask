@@ -1,6 +1,7 @@
 #ifndef INCLUDED_CONNECTIONPROCESSOR_H
 #define INCLUDED_CONNECTIONPROCESSOR_H
 #include "clientconnection.h"
+
 #include <functional>
 
 struct event_base;
@@ -9,6 +10,8 @@ struct bufferevent;
 
 class ConnectionProcessor
 {
+friend std::ostream& operator<<(std::ostream&, const ConnectionProcessor&);
+    
 public:
     typedef std::function<void(evbuffer *input)> OnDataCb;
     typedef std::function<void()> OnCloseCb;
@@ -18,15 +21,15 @@ public:
     ConnectionProcessor(const ClientConnection& connection, event_base *events);
     virtual ~ConnectionProcessor();
     
-//    void setOnDataCb(const OnDataCb& cb);
     void setOnCloseCb(const OnCloseCb& cb);
 
-    void connect (const std::string& host, uint16_t port, OnConnectCb);
+    bool connect (const std::string& host, uint16_t port, OnConnectCb);
     virtual void close();
     
-    void sendData(evbuffer *data);
+    bool sendData(evbuffer *data);
     virtual void dataRecieved(evbuffer *input) = 0;
-//    virtual void connectionClosed();
+    
+    event_base* getEvents();
     
 private:
     static void readProxy(bufferevent *bev, void *ctx);
@@ -38,8 +41,10 @@ private:
     bufferevent *_bev;
     OnConnectCb _connectCb;
     bool _connecting;
-//    OnDataCb  _dataCb;
     OnCloseCb _closeCb;
+    bool _incoming;
+    std::string _host;
+    uint16_t _port;
 };
 
 inline void ConnectionProcessor::setOnCloseCb(const ConnectionProcessor::OnCloseCb& cb)
@@ -47,11 +52,12 @@ inline void ConnectionProcessor::setOnCloseCb(const ConnectionProcessor::OnClose
     _closeCb = cb;
 }
 
-/*
-inline void ConnectionProcessor::setOnDataCb(const ConnectionProcessor::OnDataCb& cb)
-{
-    _dataCb = cb;
+inline event_base* ConnectionProcessor::getEvents(){
+    return _eventbase;
 }
-*/
+
+
+std::ostream& operator<<(std::ostream& os, const ConnectionProcessor& cp);
+
 
 #endif

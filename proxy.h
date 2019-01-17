@@ -24,7 +24,6 @@ private:
     size_t _bytesRead;
     char _data[MSG_SIZE];
     std::shared_ptr<Config> _config;
-    event_base *_events;
     evbuffer *_lastInput;
     
 };

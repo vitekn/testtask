@@ -9,7 +9,12 @@
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
+#include <log4cpp/Category.hh>
 
+using namespace log4cpp;
+namespace {
+    Category& logger = Category::getInstance("Server");
+}
 
 void Server::acceptCbProxy(struct evconnlistener *listener,
                            evutil_socket_t fd,
@@ -17,35 +22,30 @@ void Server::acceptCbProxy(struct evconnlistener *listener,
                            int socklen,
                            void *ctx)
 {
+    logger << Priority::DEBUG << "accept for ptr " << ctx;
     reinterpret_cast<Server*>(ctx)->onAcceptConnection(listener, fd, address, socklen);
 }
 
 void Server::errorCbProxy(evconnlistener* listener, void* ctx)
 {
+    logger << Priority::DEBUG << "error for ptr " << ctx;
     Server *s = reinterpret_cast<Server*>(ctx);
     if (s->_onError) {
         s->_onError();
     }
 }
 
-void Server::onAcceptConnection(evconnlistener* listener, int fd, sockaddr* , int)
+void Server::onAcceptConnection(evconnlistener* listener, int fd, sockaddr* sa, int)
 {
-    
-        if (_onClient) {
-            _onClient({listener, fd});
-        }
-        
-/*        struct event_base *base = evconnlistener_get_base(listener);
-        struct bufferevent *bev = bufferevent_socket_new(
-                base, fd, BEV_OPT_CLOSE_ON_FREE);
-
-        bufferevent_setcb(bev, echo_read_cb, NULL, echo_event_cb, NULL);
-
-        bufferevent_enable(bev, EV_READ|EV_WRITE);*/
+    if (_onClient) {
+        logger << Priority::DEBUG << "onAcceptConnection";
+        _onClient({listener, fd, *((sockaddr_in*)sa)});
+    }
 }
 
-void Server::init()
+bool Server::init()
 {
+    logger << Priority::DEBUG << "init on port: " << _port;
     sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
@@ -58,18 +58,22 @@ void Server::init()
                                         -1,
                                         (struct sockaddr*)&addr,
                                         sizeof(addr));
+    if (!_listener) {
+        logger << Priority::ERROR << "can't bind to port: " << _port;
+        return false;
+    }
+    
     evconnlistener_set_error_cb(_listener, &Server::errorCbProxy);
+    return true;
 }
 
 Server::Server(std::uint16_t port): _internalEvents(true), _base(event_base_new()), _port(port)
 {
-    init();
 }
 
 
 Server::Server( std::uint16_t port, event_base *base): _internalEvents(false), _base(base), _port(port)
 {
-    init();
 }
 
 Server::~Server()
@@ -83,9 +87,13 @@ Server::~Server()
 
 bool Server::run()
 {
+    
     if (!_internalEvents || !_base || !_listener) {
+        logger << Priority::ERROR << "can't run mulformed instance on port: " << _port;
         return false;
     }
+ 
+    logger << Priority::DEBUG << "running on port: " << _port;
         
     event_base_dispatch(_base);
     return true;
@@ -93,6 +101,8 @@ bool Server::run()
 
 void Server::stop()
 {
+    logger << Priority::DEBUG << "stopping on port: " << _port;
+ 
     if (_internalEvents) {
         event_base_loopbreak(_base);
     }

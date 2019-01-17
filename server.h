@@ -26,6 +26,7 @@ public:
     void setOnError(const OnErrorCb& onError);
     void setOnClientConnect(const OnClientConnectCb& onClient);
     
+    bool init();
     bool run();
     void stop();
     
@@ -42,7 +43,6 @@ private:
     
     static void errorCbProxy(evconnlistener *listener, void *ctx);
     
-    void init();
     
     bool _internalEvents;
     struct evconnlistener *_listener;
