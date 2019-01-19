@@ -22,14 +22,15 @@ void ConnectionManager::addConnection(const std::shared_ptr<ConnectionProcessor>
     std::lock_guard<std::mutex> lock(_mutex);
     {
         if (_running) {
-            processor->setOnCloseCb(std::bind(&ConnectionManager::onProcessorExit, this, processor));
+            
+            processor->setOnCloseCb(std::bind(&ConnectionManager::dropConnection, this, processor));
             _processors.insert(processor);
             logger << Priority::DEBUG << "addConnection added " << processor;
         }
     }
 }
 
-void ConnectionManager::onProcessorExit(const std::weak_ptr<ConnectionProcessor>& processor)
+void ConnectionManager::dropConnection(const std::weak_ptr<ConnectionProcessor>& processor)
 {
     logger << Priority::DEBUG << "onProcessorExit";
     std::lock_guard<std::mutex> lock(_mutex);
@@ -38,7 +39,7 @@ void ConnectionManager::onProcessorExit(const std::weak_ptr<ConnectionProcessor>
             const std::shared_ptr<ConnectionProcessor> scp = processor.lock();
             if (scp) {
                 logger << Priority::DEBUG << "onProcessorExit closing " << *scp;
-                _processors.erase(processor.lock());
+                _processors.erase(scp);
             }
         }
     }
@@ -49,7 +50,7 @@ void ConnectionManager::dropAll()
     logger << Priority::DEBUG << "dropAll";
     std::lock_guard<std::mutex> lock(_mutex);
     {
-        _running = true;
+        _running = false;
         _processors.clear();
     }
 }

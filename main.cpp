@@ -2,6 +2,13 @@
 #include "connectionmanager.h"
 #include "config.h"
 #include "proxy.h"
+#include "proxymanager.h"
+#include "controller.h"
+#include "jsonparser.h"
+#include "controlchannel.h"
+
+#include <event2/event.h>
+
 #include <iostream>
 #include <event2/event.h>
 #include <functional>
@@ -98,14 +105,19 @@ int main(int argc, char **argv)
         root << Priority::ERROR << "can't init server";
         return -4;
     }
-    
-    ConnectionManager cm(base);
 
+    
+    std::shared_ptr<ConnectionManager> cm = std::make_shared<ConnectionManager>(base);
+    std::shared_ptr<ProxyManager> pm = std::make_shared<ProxyManager>(cm);
+
+    Controller ctl(pm);
+
+    ControlChannel cc(base,"amqp://localhost/","proxyCtl", std::make_shared<JsonParser>());
+    cc.setCtlMsgCallback(std::bind(&Controller::onControlMessage,&ctl, std::placeholders::_1));
+    cc.start();
+    
     s.setOnClientConnect([&](const ClientConnection& connection) {
-        
-        std::shared_ptr<ConnectionProcessor> p(new Proxy(connection, cm.getEvents(), cfg));
-        cm.addConnection(p);
-        
+        pm->addProxy(std::make_shared<Proxy>(connection, cm->getEvents(), cfg));
     });
 
     if (run) {
@@ -115,8 +127,8 @@ int main(int argc, char **argv)
     }
     
     root << Priority::DEBUG << "closing connections.";
-    cm.dropAll();
-
+    ctl.onControlMessage({ControlMessage::CLOSE_ALL,0});
+    cc.stop();
     root << Priority::DEBUG << "cleanup.";
     event_base_free(base);
     return 0;

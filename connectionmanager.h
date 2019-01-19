@@ -22,15 +22,17 @@ public:
     bool run();
     bool stop();
     void dropAll();
+    void dropConnection(const std::weak_ptr<ConnectionProcessor>& processor);
     
     event_base* getEvents();
     
     
 private:
     
-    void onProcessorExit(const std::weak_ptr<ConnectionProcessor>& processor);
+   // void onProcessorExit(const std::weak_ptr<ConnectionProcessor>& processor);
     
-    event_base                               *_events;
+    event_base   *_events;
+    
     std::unordered_set<std::shared_ptr<ConnectionProcessor> >  _processors;
     std::mutex _mutex;
     bool _running; 

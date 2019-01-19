@@ -17,10 +17,12 @@ namespace {
     };
 }
 
-Proxy::Proxy(const ClientConnection& connection, event_base* events,const std::shared_ptr<Config>& config) : ConnectionProcessor(connection, events),_state(BEGIN), _config(config)
+Proxy::Proxy(const ClientConnection& connection, event_base* events,const std::shared_ptr<Config>& config)
+: ConnectionProcessor(connection, events)
+, _state(BEGIN)
+, _config(config)
+, _id(-1)
 {
-
-    
 }
 
 void Proxy::onConnected(bool res)
@@ -34,6 +36,12 @@ void Proxy::onConnected(bool res)
     dataRecieved(_lastInput);
     _lastInput = 0;
 }
+
+Proxy::~Proxy()
+{
+    _fwd.reset();
+}
+
 
 void Proxy::onFwdClose()
 {
@@ -71,6 +79,12 @@ void Proxy::dataRecieved(evbuffer* input)
                 close();
                 return;
             }
+            
+            _id = id;
+            if (_idClb) {
+                _idClb(_id);
+            }
+            
             _fwd.reset(new Forwarder(getEvents()));
             _fwd->setOnCloseCb(std::bind(&Proxy::onFwdClose, this));
             _fwd->setDestination(this);
