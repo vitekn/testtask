@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     Controller ctl(pm);
 
     ControlChannel cc(base,"amqp://localhost/","proxyCtl", std::make_shared<JsonParser>());
-    cc.setCtlMsgCallback(std::bind(&Controller::onControlMessage,&ctl, std::placeholders::_1));
+    cc.setCtlMsgCallback(std::bind(&Controller::onControlMessage, &ctl, std::placeholders::_1));
     cc.start();
     
     s.setOnClientConnect([&](const ClientConnection& connection) {

@@ -22,8 +22,6 @@ void ConnectionManager::addConnection(const std::shared_ptr<ConnectionProcessor>
     std::lock_guard<std::mutex> lock(_mutex);
     {
         if (_running) {
-            
-            processor->setOnCloseCb(std::bind(&ConnectionManager::dropConnection, this, processor));
             _processors.insert(processor);
             logger << Priority::DEBUG << "addConnection added " << processor;
         }
@@ -32,13 +30,13 @@ void ConnectionManager::addConnection(const std::shared_ptr<ConnectionProcessor>
 
 void ConnectionManager::dropConnection(const std::weak_ptr<ConnectionProcessor>& processor)
 {
-    logger << Priority::DEBUG << "onProcessorExit";
+    logger << Priority::DEBUG << "dropConnection";
     std::lock_guard<std::mutex> lock(_mutex);
     {
         if (_running) {
             const std::shared_ptr<ConnectionProcessor> scp = processor.lock();
             if (scp) {
-                logger << Priority::DEBUG << "onProcessorExit closing " << *scp;
+                logger << Priority::DEBUG << "dropConnection closing " << *scp;
                 _processors.erase(scp);
             }
         }
@@ -59,7 +57,7 @@ bool ConnectionManager::run()
 {
     logger << Priority::DEBUG << "run";
     if (!_internalEvents) {
-        logger << Priority::ERROR << "can't run extarnally driven instance";
+        logger << Priority::ERROR << "can't run externally driven instance";
         return false;
     }
         
@@ -72,7 +70,7 @@ bool ConnectionManager::stop()
 {
     logger << Priority::DEBUG << "stop";
     if (!_internalEvents) {
-        logger << Priority::ERROR << "can't stop extarnally driven instance";
+        logger << Priority::ERROR << "can't stop externally driven instance";
         return false;
     }
     event_base_loopbreak(_events);

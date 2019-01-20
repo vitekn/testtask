@@ -129,6 +129,7 @@ void ConnectionProcessor::close()
 
 ConnectionProcessor::~ConnectionProcessor()
 {
+    logger << Priority::DEBUG << "~ConnectionProcessor " << *this << " buf = " << _bev;
     if (_bev){
         bufferevent_free(_bev);
         _bev = 0;

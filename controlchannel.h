@@ -30,6 +30,7 @@ private:
     bool _running;
     AMQP::LibEventHandler _handler;
     AMQP::TcpConnection _connection;
+    AMQP::TcpChannel _channel;
 
     
 };

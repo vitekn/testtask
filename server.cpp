@@ -81,7 +81,6 @@ Server::~Server()
     if (_listener) {
         evconnlistener_free(_listener);
     }
-    
 }
 
 

@@ -18,6 +18,7 @@ public:
     
     void dropById(int id);
     void dropAll();
+    void dropConnection(const std::weak_ptr<Proxy>& proxy);
     
 private:
     typedef std::unordered_multimap<int, std::weak_ptr<ConnectionProcessor> > IdToConn;

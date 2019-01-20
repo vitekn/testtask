@@ -22,6 +22,7 @@ class Client(threading.Thread):
 
         sock = socket.socket()
         sock.settimeout(1)
+#        sock.setsockopt(socket.SOL_SOCKET, socket.MSG_NOSIGNAL, 0)
         sock.connect((self._host, self._port))
         if sock.send(msg1) <= 0:
             print("send error")
@@ -35,10 +36,13 @@ class Client(threading.Thread):
         ct = 12
         rct = 0
         while self._run:
-            if sock.send(data) <= 0:
+            try:
+                sock.send(data)
+            except (ConnectionError, socket.timeout):
                 print("send error")
                 self.status = 2
                 break
+
 
             self.send_data.extend(data)
 
@@ -46,9 +50,15 @@ class Client(threading.Thread):
             print("send:{}".format(data.hex()))
             time.sleep(1)
 
-            rcv = sock.recv(1024)
+            try:
+                rcv = sock.recv(1024)
+            except (ConnectionError, socket.timeout) as e:
+                print("recv error:" + e)
+                self.status = 3
+                break
+
             if rcv is None:
-                print("recv error")
+                print("recv error res is none")
                 self.status = 3
                 break
 
