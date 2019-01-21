@@ -8,12 +8,14 @@ namespace {
 }
 
 Config::Config()
-:_verbosity(0)
-,_cfgFile("config.cfg")
-,_logFile()
-,_useSyslog(false)
-,_useConsole(false)
-,_port(12345)
+: _verbosity(0)
+, _cfgFile("config.cfg")
+, _logFile()
+, _useSyslog(false)
+, _useConsole(false)
+, _port(12345)
+, _rmqStr("amqp://localhost/")
+, _rmqQueueName("proxyCtl")
 {
 }
 
@@ -59,7 +61,7 @@ bool Config::read(std::istream& in)
 bool Config::parseCmdLine(int argc, char ** argv)
 {
     int c ;
-    while( ( c = getopt (argc, argv, "v:c:l:p:soh") ) != -1 ) 
+    while( ( c = getopt (argc, argv, "v:c:l:p:r:q:soh") ) != -1 ) 
     {
         switch(c)
         {
@@ -79,6 +81,14 @@ bool Config::parseCmdLine(int argc, char ** argv)
                 if(!optarg) return false;
                 _port = std::atoi(optarg) ;
                 break;
+            case 'r':
+                if(!optarg) return false;
+                _rmqStr = std::string(optarg) ;
+                break;
+            case 'q':
+                if(!optarg) return false;
+                _rmqQueueName = std::string(optarg) ;
+                break;
             case 's':
                 _useSyslog = true;
                 break;
@@ -87,7 +97,7 @@ bool Config::parseCmdLine(int argc, char ** argv)
                 break;
             case 'h':
                 std::cout << "Usage:\n"
-                             "    testtask [-h] [-p port] [-v N] [-c config] [-l logfile] [-s] [-o]\n"
+                             "    testtask [-h] [-p port] [-v N] [-c config] [-l logfile] [-s] [-o] [-r RMQString] [-q RMQQueueName]\n"
                              "\n"
                              "    Defaults:\n"
                              "        -p (port)          = 12345\n"
@@ -95,7 +105,9 @@ bool Config::parseCmdLine(int argc, char ** argv)
                              "        -c (config file)   = config.cfg\n"
                              "        -l (log file)      = [no file]\n"
                              "        -s (log to syslog)\n"
-                             "        -o (log to console)\n\n";
+                             "        -o (log to console)\n"
+                             "        -r (rmq conn str)  = \"amqp://localhost/\"\n"
+                             "        -q (rmq queue name)= \"proxyCtl\"\n\n";
                              return false;
             default:
                 return false;

@@ -21,6 +21,8 @@ public:
     int verbosity() const;
     const std::string& cfgFilename() const;
     uint16_t port() const;
+    const std::string& getRMQConnectionString();
+    const std::string& getRMQQueueName();
     
 private:
     typedef std::unordered_map<int, Host> Hosts;
@@ -32,6 +34,8 @@ private:
     bool _useSyslog;
     bool _useConsole;
     uint16_t _port;
+    std::string _rmqStr;
+    std::string _rmqQueueName;
     
 };
 
@@ -64,5 +68,16 @@ inline uint16_t Config::port() const
 {
     return _port;
 }
+
+inline const std::string & Config::getRMQConnectionString()
+{
+    return _rmqStr;
+}
+
+inline const std::string & Config::getRMQQueueName()
+{
+    return _rmqQueueName;
+}
+
 
 #endif
