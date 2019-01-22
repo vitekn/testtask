@@ -1,0 +1,15 @@
+FROM python:3.6-slim
+
+EXPOSE 8888
+EXPOSE 8889
+EXPOSE 8890
+
+WORKDIR /tests
+
+COPY . /tests
+
+RUN pip install pika
+
+CMD [ "python" , "./test.py" ]
+
+

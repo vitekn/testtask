@@ -24,8 +24,11 @@ class EchoServerClientProtocol(asyncio.Protocol):
 
 
 class Server(threading.Thread):
+    _ids = count(0)
+
     def __init__(self, port):
         threading.Thread.__init__(self)
+        self.num = next(self._ids)
         self._port = port
         self._proc = None
         self._loop = None
@@ -45,7 +48,7 @@ class Server(threading.Thread):
         self._loop = asyncio.new_event_loop()
         loop = self._loop
         asyncio.set_event_loop(loop)
-        print("creating server on port {}".format(self._port))
+        print("creating server on port {0} n: {1}".format(self._port, self.num))
         coro = loop.create_server(lambda: EchoServerClientProtocol(self), '0.0.0.0', self._port)
         server = loop.run_until_complete(coro)
         if not server.sockets:
@@ -56,7 +59,7 @@ class Server(threading.Thread):
         print("running server")
         loop.run_forever()
 
-        print("closing server")
+        print("closing server {}".format(self.num))
         server.close()
         loop.run_until_complete(server.wait_closed())
         loop.close()

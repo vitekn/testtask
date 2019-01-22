@@ -1,0 +1,12 @@
+FROM ubuntu
+
+EXPOSE 12345
+
+WORKDIR /app
+COPY . /app
+
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apt-utils liblog4cpp5v5 libevent-2.1-6 libjsoncpp1
+
+CMD [ "./start.sh" ]
+
