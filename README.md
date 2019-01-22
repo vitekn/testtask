@@ -1,5 +1,22 @@
 # testtask
 
+Build
+
+create a docker container
+docker build -t name .
+
+run build:
+docker -v /output/folder/on/host:/output -i -t name
+
+you'll find docker-proxy and docker-tests folders where you can build containers for proxy and tests
+
+cd /output/folder/on/host/docker-proxy
+docker build -t proxy .
+
+cd /output/folder/on/host/docker-tests
+docker build -t tests .
+
+
 Proxy:
 
 SERVER_1,2,3 go to /etc/hosts in the container as n1,2,3.example.com 
