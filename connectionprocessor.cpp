@@ -55,6 +55,7 @@ void ConnectionProcessor::onEvent(short events)
 
 ConnectionProcessor::ConnectionProcessor(const ClientConnection& connection, event_base* events): _eventbase(events), _connecting(false), _incoming(true)
 {
+    _dns_base = evdns_base_new(_eventbase, 1);
     logger << Priority::DEBUG << "creating - existing connection " << this;
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &connection.sa.sin_addr.s_addr, ip, INET_ADDRSTRLEN);
@@ -71,6 +72,7 @@ ConnectionProcessor::ConnectionProcessor(const ClientConnection& connection, eve
 
 ConnectionProcessor::ConnectionProcessor(event_base* events): _eventbase(events), _connecting(false), _incoming(false)
 {
+    _dns_base = evdns_base_new(_eventbase, 1);
     logger << Priority::DEBUG << "creating - new connection " << this;
     _bev = bufferevent_socket_new(events, -1, BEV_OPT_CLOSE_ON_FREE);
     logger << Priority::DEBUG << "creating, bufferevent = " << _bev;
@@ -87,10 +89,9 @@ bool ConnectionProcessor::connect(const std::string& host, uint16_t port, Connec
     _port = port;
     _connecting = true;
     _connectCb = cb;
-    evdns_base *dns_base;
-    dns_base = evdns_base_new(_eventbase, 1);
     
-    const int rc = bufferevent_socket_connect_hostname(_bev, dns_base, AF_UNSPEC, host.c_str(), port);
+    
+    const int rc = bufferevent_socket_connect_hostname(_bev, _dns_base, AF_UNSPEC, host.c_str(), port);
     
     if (0 != rc) {
         logger << Priority::ERROR << "can't connect to " << host << ':' << port;
@@ -134,6 +135,7 @@ ConnectionProcessor::~ConnectionProcessor()
         bufferevent_free(_bev);
         _bev = 0;
     }
+    evdns_base_free(_dns_base,0);
 }
 
 

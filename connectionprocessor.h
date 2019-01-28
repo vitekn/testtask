@@ -7,6 +7,7 @@
 struct event_base;
 struct evbuffer;
 struct bufferevent;
+struct evdns_base;
 
 class ConnectionProcessor
 {
@@ -45,6 +46,7 @@ private:
     bool _incoming;
     std::string _host;
     uint16_t _port;
+    evdns_base *_dns_base;
 };
 
 inline void ConnectionProcessor::setOnCloseCb(const ConnectionProcessor::OnCloseCb& cb)
